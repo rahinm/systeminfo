@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="3.0" xmlns="http://java.sun.com/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
+
+    <description>The standard web descriptor for the SystemInfo</description>
+
+    <servlet>
+        <servlet-name>SystemInfo</servlet-name>
+        <servlet-class>net.dollmar.systeminfo.SystemInfoServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>SystemInfo</servlet-name>
+        <url-pattern>/SystemInfo</url-pattern>
+    </servlet-mapping>
+
+    <!--
+        Security constraints. Uses Application realm (present in Wildfly's default configuration) and
+        jmx-admin roles.
+    -->
+
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>SystemInfo restricted access</web-resource-name>
+            <description>An example security config that only allows users with the
+                role 'systeminfo' to access the SystemInfo web application
+            </description>
+            <url-pattern>/*</url-pattern>
+        </web-resource-collection>
+        <auth-constraint>
+            <role-name>systeminfo</role-name>
+        </auth-constraint>
+    </security-constraint>
+
+    <login-config>
+        <auth-method>BASIC</auth-method>
+        <realm-name>ApplicationRealm</realm-name>
+    </login-config>
+
+    <security-role>
+        <role-name>systeminfo</role-name>
+    </security-role>
+
+</web-app>

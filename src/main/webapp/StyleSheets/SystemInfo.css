@@ -1,0 +1,121 @@
+/* *********************************************************
+*  SystemInfo - Cascading style sheets
+*  @author John Glendon/Mohammad Rahin
+*
+***********************************************************/
+h1{
+font-family: Verdana;
+font-size: 40pt;
+color: #000099;
+font-style: bold;
+}
+
+h2{
+font-family: Verdana;
+font-size: 16pt;
+color: #000099;
+}
+
+h3{
+font-family: Verdana;
+font-size: 12pt;
+color: #000099;
+}
+
+h4{
+font-family: Verdana;
+font-size: 8pt;
+color: #000000;
+}
+p{
+font-family: Verdana;
+font-size: 10pt;
+color: #000000;
+}
+
+
+b{
+font-family: Verdana;
+font-size: 10pt;
+font-weight: bold;
+color: #000099;
+}
+
+i{
+font-family: Verdana;
+font-size: 10pt;
+color: #000000;
+font-style: italic;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+th, td {
+    font-family: Verdana;
+    font-size: 10pt;
+    text-align: left;
+}
+
+tr:hover {background-color:#f5f5f5;}
+/*
+tr:nth-child(even){background-color: #f2f2f2}
+*/
+
+th {
+    background-color: #4CAF50;
+    color: white;
+}
+ 
+.topcorpcell
+{
+background-image:url('topBanner.gif');
+background-color:white;
+color:purple;
+font-family:sans-serif;
+font-weight:700;	
+}
+
+.TEST
+{
+background-color:white;
+color:purple;
+font-family:sans-serif;
+font-weight:700;	
+}
+
+.corp, .corp TD, .corp TH .corpcell
+{
+background-image:url('lowerBanner.gif');
+background-color:white;
+color:purple;
+font-family:sans-serif;
+font-weight:700;
+
+}
+
+u{
+font-family: Verdana;
+font-size: 10pt;
+color: #000000;
+text-shadow: 5pt 5pt red
+}
+
+:link{
+color: #FF3300;
+}
+/*
+:visted{
+color: #F0BE0A;
+background: #000000;
+font-style: normal;
+}
+
+:hover{
+font-family: Arial Black;
+color: #000000;
+background: #F0BE0A;
+font-style: normal;
+text-decoration: none;
+}*/
