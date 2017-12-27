@@ -115,7 +115,11 @@ public class SystemInfoServlet extends HttpServlet {
     return sdf.format(new Date(epochTime));
   }
 
-
+  private String getHostName() throws IOException {
+    return InetAddress.getLocalHost().getHostName();
+  }
+  
+  
   protected void doGet(HttpServletRequest request, HttpServletResponse response) 
       throws ServletException, IOException {
     processRequest(request, response);
@@ -206,7 +210,7 @@ public class SystemInfoServlet extends HttpServlet {
     OperatingSystemMXBean osInfo = ManagementFactory.getOperatingSystemMXBean();
     File rootDir = new File("/");
     
-    sb.append("<tr><td>Host Name</td><td>" + InetAddress.getLocalHost().getHostName() + "</td></tr>");
+    sb.append("<tr><td>Host Name</td><td>" + getHostName() + "</td></tr>");
     sb.append("<tr><td>OS Name</td><td>" + osInfo.getName() + "</td></tr>");
     sb.append("<tr><td>OS Version</td><td>" + osInfo.getVersion() + "</td></tr>");
     sb.append("<tr><td>Architecture</td><td>" + osInfo.getArch() + "</td></tr>");
@@ -436,9 +440,17 @@ public class SystemInfoServlet extends HttpServlet {
 
     sb.append("</table>");
 
-    sb.append(createAnchorForPopup(FUNCTION_THREAD_DUMP, "noparam", "", 
-        "<h3><i>Click to create a thread dump file</i></h3>"));
+//    sb.append(createLinkForPopup(FUNCTION_THREAD_DUMP, "noparam", "", 
+//        "<h3><i>Click to create a thread dump file</i></h3>"));
 
+    sb.append("<br>");
+    
+    String thDump = createButtonForPopup(FUNCTION_THREAD_DUMP, "noparam", "", "<h3><i>Thread Dump</i></h3>");
+    String refresh = String.format("<a href=\"SystemInfo?function=%s\"><button><h3><i>Refresh Screen</i></h3></button></a>", FUNCTION_THREADSINFO);
+    sb.append("<table border='0' cellpadding='5'>");
+    sb.append("<tr><td>").append(thDump).append("</td><td>             </td><td>").append(refresh).append("</td></tr>");
+    sb.append("</table>");
+    
     sb.append("<br>");
 
     sb.append(buildHtmlTableForThreads("Threads: BLOCKED", blockedThreads, currentThreadCount));
@@ -476,7 +488,7 @@ public class SystemInfoServlet extends HttpServlet {
     for (ThreadInfo ti : threadList) {
       //sb.append("<tr><td>").append(ti.getThreadId()).append("</td>");
       String tid = "" + ti.getThreadId();
-      sb.append("<tr><td>").append(createAnchorForPopup(FUNCTION_SINGLE_THREADINFO, THREAD_ID_PARAM, tid, tid)).append("</td>");
+      sb.append("<tr><td>").append(createLinkForPopup(FUNCTION_SINGLE_THREADINFO, THREAD_ID_PARAM, tid, tid)).append("</td>");
       sb.append("<td>").append(ti.getThreadName()).append("</td>");
       sb.append("<td>").append(ti.getThreadState().toString()).append("</td>");
       sb.append("<td>").append(ti.getBlockedCount()).append("</td>");
@@ -491,7 +503,7 @@ public class SystemInfoServlet extends HttpServlet {
     return sb.toString();
   }
 
-  private String createAnchorForPopup(String function, String param, String value, String linkText) {
+  private String createLinkForPopup(String function, String param, String value, String linkText) {
     String url = String.format("SystemInfo?function=%s&%s=%s", function, param, value);
 
     StringBuilder sb = new StringBuilder();
@@ -502,6 +514,16 @@ public class SystemInfoServlet extends HttpServlet {
     return sb.toString();
   }
 
+  private String createButtonForPopup(String function, String param, String value, String linkText) {
+    String url = String.format("SystemInfo?function=%s&%s=%s", function, param, value);
+
+    StringBuilder sb = new StringBuilder();
+    sb.append(String.format("<a href=\"%s\" ", url)).append("target=\"popup\" ");
+    sb.append(
+        String.format("onclick=\"window.open('%s', 'popup', 'width=1000, height=600'); return false;\">", url));
+    sb.append("<button>").append(linkText).append("</button></a>");
+    return sb.toString();
+  }
 
 
   private void displaySingleThreadInfo(HttpServletRequest request, HttpServletResponse response, String threadId) 
@@ -578,12 +600,12 @@ public class SystemInfoServlet extends HttpServlet {
     }
 
     String outFile = null;
-    if (!"Windows".equalsIgnoreCase(System.getProperty("os.name"))) {
-      outFile = "/tmp/SystemInfo-ThreadDump-" + this.currentDateTimeStamp("yyyyMMddHHmmss") + ".txt";
+    if (System.getProperty("os.name").startsWith("Windows")) {
+      outFile = System.getenv("Temp") 
+          + String.format("%s-ThreadDump-%s.txt", getHostName(), this.currentDateTimeStamp("yyyyMMddHHmmss"));
     }
     else {
-      outFile = System.getenv("Temp") 
-          + "SystemInfo-ThreadDump-" + this.currentDateTimeStamp("yyyyMMddHHmmss") + ".txt";
+      outFile = String.format("/tmp/%s-ThreadDump-%s.txt", getHostName(), this.currentDateTimeStamp("yyyyMMddHHmmss"));
     }
     if (outFile != null) {
       try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outFile), "utf-8"))) {
