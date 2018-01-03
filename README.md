@@ -36,8 +36,8 @@ SystemInfo uses HTML basic authentication. You must create a user role 'systemin
 create or modify a user with this new role. Please refer to your application server documentation
 for information on how to configure user roles and create/modify user accounts. 
 
-If you wish to disable HTML basic authentication please comment out the complete <security-constraint>, 
-<login-config> & <security-role> sections from the web.xml file.
+If you wish to disable HTML basic authentication please comment out the complete &lt;security-constraint>, 
+&lt;login-config> & &lt;security-role> sections from the web.xml file.
 
 ## Using SystemInfo
 Using a web browser point to the web context /SystemInfo as exponsed by your application server.
