@@ -64,7 +64,7 @@ public class SystemInfoServlet extends HttpServlet {
   private static final long serialVersionUID = 1L;
 
 
-  private static final String VERSION = "0.5";
+  private static final String VERSION = "0.6";
   
   private static final String FUNCTION_PARAM = "function";
   private static final String THREAD_ID_PARAM = "threadId";
@@ -550,6 +550,8 @@ public class SystemInfoServlet extends HttpServlet {
         sb.append("<tr><td>Thread id</td><td>" + ti.getThreadId() + "</td></tr>");
         sb.append("<tr><td>Thread name</td><td>" + ti.getThreadName() + "</td></tr>");
         sb.append("<tr><td>Thread state</td><td>" + ti.getThreadState().toString() + "</td></tr>");
+        sb.append("<tr><td>Thread CPU Time (in ns)</td><td>" + threadsInfo.getThreadCpuTime(ti.getThreadId()) + "</td></tr>");
+        sb.append("<tr><td>Thread User Time (in ns)</td><td>" + threadsInfo.getThreadUserTime(ti.getThreadId()) + "</td></tr>");
         sb.append("<tr><td>Total blocked count</td><td>" + ti.getBlockedCount() + "</td></tr>");
         sb.append("<tr><td>Total blocked time (in seconds) </td><td>" + ti.getBlockedTime() / 1000.0 + "</td></tr>");
         sb.append("<tr><td>Total waited count</td><td>" + ti.getWaitedCount() + "</td></tr>");
