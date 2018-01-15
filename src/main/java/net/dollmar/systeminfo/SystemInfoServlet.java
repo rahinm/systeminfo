@@ -19,6 +19,7 @@ import java.lang.management.OperatingSystemMXBean;
 import java.lang.management.RuntimeMXBean;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
+import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -37,19 +38,19 @@ import javax.servlet.http.HttpServletResponse;
 
 /*
 Copyright 2017 Mohammad A. Rahin                                                                                                          
-                                                                                                                                          
+
 Licensed under the Apache License, Version 2.0 (the "License");                                                                           
 you may not use this file except in compliance with the License.                                                                          
 You may obtain a copy of the License at                                                                                                   
-                                                                                                                                          
+
     http://www.apache.org/licenses/LICENSE-2.0                                                                                            
-                                                                                                                                          
+
 Unless required by applicable law or agreed to in writing, software                                                                       
 distributed under the License is distributed on an "AS IS" BASIS,                                                                         
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.                                                                  
 See the License for the specific language governing permissions and                                                                       
 limitations under the License.       
-*/
+ */
 
 /**
  * The HTMl SystemInfo Controller servlet
@@ -65,7 +66,7 @@ public class SystemInfoServlet extends HttpServlet {
 
 
   private static final String VERSION = "0.6";
-  
+
   private static final String FUNCTION_PARAM = "function";
   private static final String THREAD_ID_PARAM = "threadId";
 
@@ -81,6 +82,26 @@ public class SystemInfoServlet extends HttpServlet {
   private static final String FUNCTION_THREAD_DUMP = "threadDump";
 
   public static final long MB = 1024 * 1024;
+
+
+  public static class Metric {
+    private String name;
+    private String value;
+
+    public Metric(String n, String v) {
+      name = n;
+      value = v;
+    }
+
+
+    public String getName() {
+      return name;
+    }
+
+    public String getValue() {
+      return value;
+    }
+  }
 
 
   public SystemInfoServlet() {
@@ -118,7 +139,11 @@ public class SystemInfoServlet extends HttpServlet {
   private String getHostName() throws IOException {
     return InetAddress.getLocalHost().getHostName();
   }
-  
+
+  private String getShortHostName() throws IOException {
+    String hostName = getHostName();
+    return hostName.substring(0, hostName.indexOf("."));
+  }
   
   protected void doGet(HttpServletRequest request, HttpServletResponse response) 
       throws ServletException, IOException {
@@ -170,23 +195,23 @@ public class SystemInfoServlet extends HttpServlet {
     return sb.toString();
   }
 
-  
+
   private static final String HOME_PAGE_INFO = "SystemInfo is a collection of JVM tools packaged together within a war file.<br>" + 
-        "    This war file should be deployed into a JEE container like Tomcat, JBoss etc.<br>" + 
-        "    to gather JVM run-time information on Memory usage, GC details and threads<br>" + 
-        "    details." + 
-        "    <br><br>" + 
-        "    The following set of information can be obtained.\n" + 
-        "    <ul>\n" + 
-        "      <li>Host Info</li>\n" + 
-        "      <li>JVM Info</li>\n" + 
-        "      <li>Properties Info</li>\n" + 
-        "      <li>ClassLoading Info</li>\n" + 
-        "      <li>Memory Info</li>\n" + 
-        "      <li>GC Info</li>\n" + 
-        "      <li>Threads Info</li>\n" + 
-        "    </ul>";
-        
+      "    This war file should be deployed into a JEE container like Tomcat, JBoss etc.<br>" + 
+      "    to gather JVM run-time information on Memory usage, GC details and threads<br>" + 
+      "    details." + 
+      "    <br><br>" + 
+      "    The following set of information can be obtained.\n" + 
+      "    <ul>\n" + 
+      "      <li>Host Info</li>\n" + 
+      "      <li>JVM Info</li>\n" + 
+      "      <li>Properties Info</li>\n" + 
+      "      <li>ClassLoading Info</li>\n" + 
+      "      <li>Memory Info</li>\n" + 
+      "      <li>GC Info</li>\n" + 
+      "      <li>Threads Info</li>\n" + 
+      "    </ul>";
+
   private void displayHomePage(HttpServletRequest request, HttpServletResponse response) 
       throws ServletException, IOException {
 
@@ -197,8 +222,56 @@ public class SystemInfoServlet extends HttpServlet {
     out.print(buildHtmlPage("Home", sb.toString()));
   }
 
+
+  public static boolean isGetter(Method method){
+    if(!method.getName().startsWith("get"))      return false;
+    if(method.getParameterTypes().length != 0)   return false;  
+    if(void.class.equals(method.getReturnType())) return false;
+
+    return true;
+  }
+
+
+  private String splitCamelCase(String s) {
+    return s.replaceAll(
+        String.format("%s|%s|%s",
+            "(?<=[A-Z])(?=[A-Z][a-z])",
+            "(?<=[^A-Z])(?=[A-Z])",
+            "(?<=[A-Za-z])(?=[^A-Za-z])"
+            ),
+        " "
+        );
+  }
   
   
+  private static final String EXCEPTION_METRICS = "Arch System Load Average Version Object Name Available Processors Name Class";
+
+  private ArrayList<Metric> getAdditionalHostMetrics(Object obj) {
+    ArrayList<Metric> metrics = new ArrayList<>();
+
+    Method[] methods = obj.getClass().getMethods();
+
+    String name;
+    String value;
+    for (Method method : methods) {
+      if (isGetter(method)) {
+        name = splitCamelCase(method.getName().replaceAll("get", ""));
+        if (EXCEPTION_METRICS.contains(name)) break;
+        method.setAccessible(true); 
+        try {
+          value = (String) method.invoke(obj).toString();
+        }
+        catch (Exception e) {
+          value = "";
+        }
+        metrics.add(new Metric(name, value));
+      }
+    }
+    return metrics;
+  }
+
+
+
   private void displayHostInfo(HttpServletRequest request, HttpServletResponse response) 
       throws ServletException, IOException {
 
@@ -209,16 +282,22 @@ public class SystemInfoServlet extends HttpServlet {
 
     OperatingSystemMXBean osInfo = ManagementFactory.getOperatingSystemMXBean();
     File rootDir = new File("/");
-    
+
     sb.append("<tr><td>Host Name</td><td>" + getHostName() + "</td></tr>");
     sb.append("<tr><td>OS Name</td><td>" + osInfo.getName() + "</td></tr>");
     sb.append("<tr><td>OS Version</td><td>" + osInfo.getVersion() + "</td></tr>");
     sb.append("<tr><td>Architecture</td><td>" + osInfo.getArch() + "</td></tr>");
     sb.append("<tr><td>Processor Count</td><td>" + osInfo.getAvailableProcessors() + "</td></tr>");
     sb.append("<tr><td>System Load Average</td><td>" + osInfo.getSystemLoadAverage() + "</td></tr>");
+
+    ArrayList<Metric> xtraData = getAdditionalHostMetrics(osInfo);
+    for (Metric m : xtraData) {
+      sb.append(String.format("<tr><td>%s</td><td>%s</td></tr>", m.getName(), m.getValue()));
+    }
+
     sb.append("<tr><td>Total Disk Space (MB)</td><td>" + rootDir.getTotalSpace() / MB + "</td></tr>");
     sb.append("<tr><td>Free Disk Space (MB)</td><td>" + rootDir.getFreeSpace() / MB + "</td></tr>");
-    
+
     sb.append("</table>");
 
     PrintWriter out = response.getWriter();
@@ -440,17 +519,17 @@ public class SystemInfoServlet extends HttpServlet {
 
     sb.append("</table>");
 
-//    sb.append(createLinkForPopup(FUNCTION_THREAD_DUMP, "noparam", "", 
-//        "<h3><i>Click to create a thread dump file</i></h3>"));
+    //    sb.append(createLinkForPopup(FUNCTION_THREAD_DUMP, "noparam", "", 
+    //        "<h3><i>Click to create a thread dump file</i></h3>"));
 
     sb.append("<br>");
-    
+
     String thDump = createButtonForPopup(FUNCTION_THREAD_DUMP, "noparam", "", "<h3><i>Thread Dump</i></h3>");
     String refresh = String.format("<a href=\"SystemInfo?function=%s\"><button><h3><i>Refresh Screen</i></h3></button></a>", FUNCTION_THREADSINFO);
     sb.append("<table border='0' cellpadding='5'>");
     sb.append("<tr><td>").append(thDump).append("</td><td>             </td><td>").append(refresh).append("</td></tr>");
     sb.append("</table>");
-    
+
     sb.append("<br>");
 
     sb.append(buildHtmlTableForThreads("Threads: BLOCKED", blockedThreads, currentThreadCount));
@@ -604,10 +683,10 @@ public class SystemInfoServlet extends HttpServlet {
     String outFile = null;
     if (System.getProperty("os.name").startsWith("Windows")) {
       outFile = System.getenv("Temp") 
-          + String.format("%s-ThreadDump-%s.txt", getHostName(), this.currentDateTimeStamp("yyyyMMddHHmmss"));
+          + String.format("%s-ThreadDump-%s.txt", getShortHostName(), this.currentDateTimeStamp("yyyyMMddHHmmss"));
     }
     else {
-      outFile = String.format("/tmp/%s-ThreadDump-%s.txt", getHostName(), this.currentDateTimeStamp("yyyyMMddHHmmss"));
+      outFile = String.format("/tmp/%s-ThreadDump-%s.txt", getShortHostName(), this.currentDateTimeStamp("yyyyMMddHHmmss"));
     }
     if (outFile != null) {
       try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outFile), "utf-8"))) {
