@@ -65,7 +65,7 @@ public class SystemInfoServlet extends HttpServlet {
   private static final long serialVersionUID = 1L;
 
 
-  private static final String VERSION = "0.6";
+  private static final String VERSION = "0.7";
 
   private static final String FUNCTION_PARAM = "function";
   private static final String THREAD_ID_PARAM = "threadId";
@@ -203,13 +203,13 @@ public class SystemInfoServlet extends HttpServlet {
       "    <br><br>" + 
       "    The following set of information can be obtained.\n" + 
       "    <ul>\n" + 
-      "      <li>Host Info</li>\n" + 
-      "      <li>JVM Info</li>\n" + 
-      "      <li>Properties Info</li>\n" + 
-      "      <li>ClassLoading Info</li>\n" + 
-      "      <li>Memory Info</li>\n" + 
-      "      <li>GC Info</li>\n" + 
-      "      <li>Threads Info</li>\n" + 
+      "      <li><a href='SystemInfo?function=hostInfo'>Host Info</li>\n" + 
+      "      <li><a href='SystemInfo?function=jvmInfo'>JVM Info</li>\n" + 
+      "      <li><a href='SystemInfo?function=propsInfo'>Properties Info</li>\n" + 
+      "      <li><a href='SystemInfo?function=classLoadingInfo'>ClassLoading Info</li>\n" + 
+      "      <li><a href='SystemInfo?function=memInfo'>Memory Info</li>\n" + 
+      "      <li><a href='SystemInfo?function=gcInfo'>GC Info</li>\n" + 
+      "      <li><a href='SystemInfo?function=threadsInfo'>Threads Info</li>\n" + 
       "    </ul>";
 
   private void displayHomePage(HttpServletRequest request, HttpServletResponse response) 
@@ -653,6 +653,9 @@ public class SystemInfoServlet extends HttpServlet {
         }   
       }
     }
+    sb.append("<br>").append("<h2>  </h2>");
+    sb.append("<a href='JavaScript:window.close()'><button><h3><i>Close Window</i></h3></button></a>");
+    
     PrintWriter out = response.getWriter();
     out.print(buildHtmlPage(pageHeader, sb.toString()));
   }
