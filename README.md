@@ -20,9 +20,9 @@ Currently the following set of information are available,
  * JVM Information
  * System Properties
  * Class Loading Information
- * Memory Information
+ * Memory Information (you may create a heap dump file from here)
  * Garbage Collection Information
- * Threads Information (you may create a thread dump file from here).
+ * Threads Information (you may create a thread dump file from here)
 
 ## Installation
 SystemInfo requires Java 1.7 or above. 
